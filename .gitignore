@@ -1,0 +1,26 @@
+# Python
+__pycache__/
+*.py[cod]
+*.so
+.pytest_cache/
+.ipynb_checkpoints/
+
+# Datasets / pretrained weights / run outputs
+data/
+params/
+exps/
+cache/
+swanlog/
+*.pth
+*.pt
+*.bin
+*.safetensors
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Not committed per user request
+notebook.md
