@@ -4,7 +4,6 @@
  # For full license text, see the LICENSE file in the repo root or https://opensource.org/licenses/BSD-3-Clause
 
 env:
-  # For default users
-  # cache_root: "cache"
-  # For internal use with persistent storage
-  cache_root: "/export/home/.cache/lavis"
+  # Project-local cache. Pretrained weights are controlled separately by
+  # TORCH_HOME / HF_HOME / HF_HUB_CACHE in main.py.
+  cache_root: "cache"

@@ -382,14 +382,14 @@ params/detr-r50-pre-2branch-hico.pth
 
 | 📦 文件 / 模型 | 🌐 来源 | 📁 缓存位置 |
 |---|---|---|
-| `eva_vit_g.pth` | Google Storage | `~/.cache/torch/hub/checkpoints/` |
+| `eva_vit_g.pth` | Google Storage | `weights/torch/hub/checkpoints/` |
 | `clip_vit_L.pth` | Google Storage | 同上 |
 | `blip2_pretrained_vitL.pth` | Google Storage | 同上 |
 | `blip2_pretrained_opt2.7b.pth` | Google Storage | 同上 |
-| `facebook/opt-2.7b` | HuggingFace | `~/.cache/huggingface/hub/` |
-| `bert-base-uncased` | HuggingFace | `~/.cache/huggingface/hub/` |
+| `facebook/opt-2.7b` | HuggingFace | `weights/huggingface/hub/` |
+| `bert-base-uncased` | HuggingFace | `weights/huggingface/hub/` |
 
-> 💻 Windows 下 `~/.cache` 通常对应 `%USERPROFILE%\.cache`，例如 `%USERPROFILE%\.cache\torch\hub\checkpoints` 和 `%USERPROFILE%\.cache\huggingface\hub`。
+> 💾 默认缓存目录在**项目内**：`weights/torch/hub/checkpoints` 和 `weights/huggingface/hub`，不会写到 C 盘用户缓存。`main.py` 会自动设置 `TORCH_HOME`、`HF_HOME`、`HF_HUB_CACHE`；如需改到其他位置，在运行前设置这些环境变量即可。
 
 LAVIS 的 Google Storage 地址：
 
@@ -658,7 +658,7 @@ python main.py ...
 
 **3. 🌐 首次运行卡在下载权重**
 
-BLIP-2 / OPT 权重约 9.6 GB，缓存在 `~/.cache/torch/hub/checkpoints` 和 `~/.cache/huggingface/hub`。保持网络/VPN，或手动按第 4.4 节预下载。
+BLIP-2 / OPT 权重约 9.6 GB，默认缓存在项目内 `weights/torch/hub/checkpoints` 和 `weights/huggingface/hub`（`main.py` 会自动设置 `TORCH_HOME` / `HF_HOME` / `HF_HUB_CACHE`）。保持网络/VPN，或手动按第 4.4 节预下载。
 
 **4. 💾 评测时找不到 checkpoint**
 
@@ -675,6 +675,10 @@ BLIP-2 / OPT 权重约 9.6 GB，缓存在 `~/.cache/torch/hub/checkpoints` 和 `
 **7. 📚 NLTK 数据缺失**
 
 安装 `averaged_perceptron_tagger` 和 `universal_tagset`；如果下载失败，代码会自动退化为均匀 token 权重。
+
+**8. 🧯 `torch.load` 安全限制（要求 torch≥2.6）**
+
+如果使用 torch<2.6 + transformers 4.57，加载 HuggingFace 的 `.bin` 权重会触发 CVE-2025-32434 限制。请使用 `model.safetensors`（本项目的 OPT 权重已转换为 safetensors），或升级 torch≥2.6；safetensors 不受该限制。
 
 ---
 

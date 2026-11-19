@@ -13,8 +13,8 @@
 | 3 | `datasets/hico.py` | 一张图怎么变成 `target`：框、HOI 标签、`blip_inputs`、`llava_captions` |
 | 4 | `models/blip4hoi_clip_qformer_attn_opt_loss/gen_vlkt.py` | **主模型**：ABG 的 mask 构造、BLIP-2 前向、文本分类、损失 |
 | 5 | `models/blip4hoi_clip_qformer_attn_opt_loss/gen.py` | 检测解码器 → 交互解码器；注意力图怎么返回、怎么上采样、怎么融合 OPT 特征 |
-| 6 | `LAVIS-modified/.../blip2_opt.py` | `forward_with_prompt`：ABG 的 VLM 前向 + LSG 的逐 token 损失 |
-| 7 | `LAVIS-modified/.../Qformer.py` | attention bias 在哪里加到 softmax 之前 |
+| 6 | `lavis/models/blip2_models/blip2_opt.py` | `forward_with_prompt`：ABG 的 VLM 前向 + LSG 的逐 token 损失 |
+| 7 | `lavis/models/blip2_models/Qformer.py` | attention bias 在哪里加到 softmax 之前 |
 | 8 | `models/matcher.py` | 匈牙利匹配的代价函数 |
 | 9 | `models/backbone.py` | ResNet 骨干输出 |
 

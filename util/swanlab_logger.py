@@ -16,10 +16,9 @@ logger silently disables itself so that training/evaluation continues.
 
 import atexit
 
-try:
-    import swanlab
-except Exception:  # pragma: no cover - optional dependency
-    swanlab = None
+# Imported lazily in init_swanlab(): the huge BLIP-2/OPT weight download must
+# not be affected by SwanLab's import-time code or internal safe.block errors.
+swanlab = None
 
 _enabled = False
 _run = None
@@ -56,12 +55,18 @@ def _clean(data):
 
 
 def init_swanlab(args):
-    global _enabled, _run
+    global _enabled, _run, swanlab
     if not getattr(args, 'use_swanlab', False):
         return
+
     if swanlab is None:
-        print('[SwanLab] package is not installed; logging disabled.')
-        return
+        try:
+            import swanlab as _swanlab
+            swanlab = _swanlab
+        except Exception as exc:  # pragma: no cover - optional dependency
+            print('[SwanLab] package is not installed (%s); logging disabled.'
+                  % exc)
+            return
 
     mode = getattr(args, 'swanlab_mode', 'online')
     if mode == 'cloud':

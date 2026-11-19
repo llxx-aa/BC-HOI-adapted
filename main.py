@@ -1,3 +1,13 @@
+import os
+
+# Keep every downloaded pretrained weight inside the project directory.
+# TORCH_HOME controls the timm/torch.hub cache; HF_HOME/HF_HUB_CACHE control
+# the HuggingFace cache. Externally set variables still take precedence.
+_PROJECT_ROOT = os.path.dirname(os.path.abspath(__file__))
+os.environ.setdefault("TORCH_HOME", os.path.join(_PROJECT_ROOT, "weights", "torch"))
+os.environ.setdefault("HF_HOME", os.path.join(_PROJECT_ROOT, "weights", "huggingface"))
+os.environ.setdefault("HF_HUB_CACHE", os.path.join(_PROJECT_ROOT, "weights", "huggingface", "hub"))
+
 import argparse
 import datetime
 import json
@@ -250,9 +260,11 @@ def main(args):
         assert args.masks, "Frozen training is meant for segmentation only"
     print(args)
 
-    # Only the main process logs to SwanLab (DDP-safe).
-    if utils.is_main_process():
-        swanlab_logger.init_swanlab(args)
+    # Original: SwanLab was initialized before build_model().
+    # Build model/weights first, then initialize SwanLab, so that any
+    # SwanLab internal safe.block/error cannot interrupt the huge download.
+    # if utils.is_main_process():
+    #     swanlab_logger.init_swanlab(args)
 
     device = torch.device(args.device)
 
@@ -266,6 +278,13 @@ def main(args):
 
     model, criterion, postprocessors = build_model(args)
     model.to(device)
+
+    # Initialize SwanLab only after model/weights are loaded. The BLIP-2/OPT
+    # download happens inside build_model() and must not be interrupted by
+    # SwanLab's internal exception handling.
+    if utils.is_main_process():
+        swanlab_logger.init_swanlab(args)
+
     print('****************')
     print(model)
     print('****************')

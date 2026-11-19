@@ -57,8 +57,8 @@
 | `main.py` | `get_args_parser` | 新增 ROI 物体头开关与超参 |
 | `exp/train_hico.sh` | 启动参数 | 打开新开关 |
 | `datasets/hico.py` | `__getitem__` | 补充/确认 224×224 BLIP 坐标系下的物体框 |
-| `LAVIS-modified/lavis/models/blip2_models/blip2_opt.py` | `forward_with_prompt` 或新增方法 | 暴露 `ln_vision` 后的 ViT patch 网格与 cls |
-| `LAVIS-modified/lavis/models/blip2_models/Qformer.py` | `BertModel.forward` | 一般不用改，用新的 `query_embeds` 调用即可 |
+| `lavis/models/blip2_models/blip2_opt.py` | `forward_with_prompt` 或新增方法 | 暴露 `ln_vision` 后的 ViT patch 网格与 cls |
+| `lavis/models/blip2_models/Qformer.py` | `BertModel.forward` | 一般不用改，用新的 `query_embeds` 调用即可 |
 | `models/blip4hoi_clip_qformer_attn_opt_loss/gen_vlkt.py` | `__init__` | 新增 ROI 查询、位置编码、温度等参数 |
 | 同上 | `forward` | 计算 ROI 特征并替换 `pred_obj_logits` |
 | `models/__init__.py` | `build_model` | 如果复制新模型目录，注册新模型名 |

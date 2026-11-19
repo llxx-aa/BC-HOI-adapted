@@ -9,6 +9,7 @@ __pycache__/
 data/
 params/
 exps/
+weights/
 cache/
 swanlog/
 *.pth
@@ -21,6 +22,9 @@ swanlog/
 .idea/
 .DS_Store
 Thumbs.db
+
+# Generated evaluation output
+/results.json
 
 # Not committed per user request
 notebook.md

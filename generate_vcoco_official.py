@@ -122,8 +122,9 @@ class GEN_VLKT(nn.Module):
         src, mask = features[-1].decompose()
         bs, c, h, w = src.shape
         assert mask is not None
+        device = src.device
 
-        blip_image_inputs = {"image": torch.cat([(t['blip_inputs'].unsqueeze(0)).half().to("cuda") for t in targets], dim=0)}
+        blip_image_inputs = {"image": torch.cat([(t['blip_inputs'].unsqueeze(0)).half().to(device) for t in targets], dim=0)}
         with torch.no_grad():
             blip_image_embed = self.blip_model_opt.image_encode(blip_image_inputs, mode='only_qformer')
         blip_image_embed = self.blip_norm(self.blip_ln(blip_image_embed)).permute(1, 0, 2)
@@ -171,10 +172,10 @@ class GEN_VLKT(nn.Module):
         clip_prompt_mask[:, 1 + num_patches:, 1 + num_patches:] = matrix_2
         hoi_attn_bias_clip = clip_prompt_mask[:, None, :, :].repeat(1, 16, 1, 1)
 
-        hoi_attn_bias_qformer = hoi_attn_bias_qformer.half().to('cuda')
-        hoi_attn_bias_clip = hoi_attn_bias_clip.half().to('cuda')
+        hoi_attn_bias_qformer = hoi_attn_bias_qformer.half().to(device)
+        hoi_attn_bias_clip = hoi_attn_bias_clip.half().to(device)
 
-        blip_image_inputs = {"image": torch.cat([t['blip_inputs'].unsqueeze(0).half().to("cuda") for t in targets], dim=0),
+        blip_image_inputs = {"image": torch.cat([t['blip_inputs'].unsqueeze(0).half().to(device) for t in targets], dim=0),
                                  "text_input": ["_"] * bs}
 
         opt_loss, blip_prompt_embed, opt_in = self.blip_model_opt.forward_with_prompt(blip_image_inputs,
