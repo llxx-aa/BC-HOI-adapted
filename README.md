@@ -263,16 +263,14 @@ BC-HOI_adapted/
 conda create -n bchoi python=3.9 -y
 conda activate bchoi
 
-# 按你的 CUDA 版本安装 torch / torchvision（示例）
+# 先安装与你 CUDA/CPU 平台匹配的 torch / torchvision（示例）
 pip install torch torchvision
 
+# 安装项目其余依赖（transformers/timm/fairscale/omegaconf/nltk/swanlab/pyarrow 等）
 pip install -r requirements.txt
-pip install "transformers==4.57.6" "timm==0.9.16" "fairscale==0.4.13" \
-            "omegaconf==2.3.1" iopath opencv-python-headless nltk numpy pandas \
-            pyyaml pillow scipy pycocotools
-# 可选：SwanLab
-pip install swanlab
 ```
+
+> `requirements.txt` 也列出了 `torch`/`torchvision`；先单独安装可以确保使用与你 CUDA 版本匹配的 wheel。
 
 NLTK 词性标注数据（LSG 的词性加权会用到）：
 

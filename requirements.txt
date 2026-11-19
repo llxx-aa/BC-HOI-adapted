@@ -1,7 +1,47 @@
-cython
-pycocotools
-scipy
-opencv-python
-ftfy
-regex
-tqdm
+# BC-HOI-Adapted dependencies
+#
+# Recommended Python 3.8/3.9.
+# Install torch/torchvision first for your platform/CUDA version, e.g.:
+#   pip install torch torchvision --index-url https://download.pytorch.org/whl/cu121
+# Then install the rest:
+#   pip install -r requirements.txt
+#
+# The versions below are the tested set. Compatible newer versions may work.
+
+# Core deep learning
+torch>=2.0
+torchvision>=0.15
+
+# BLIP-2 / Q-Former / vision backbone
+transformers==4.57.6
+timm==0.9.16
+fairscale==0.4.13
+omegaconf==2.3.1
+
+# Utilities used by LAVIS / datasets / matcher
+numpy>=1.24,<3
+pandas>=1.5
+PyYAML>=6.0
+Pillow>=9.0
+scipy>=1.10
+packaging>=20.0
+iopath>=0.1.10
+tqdm>=4.60
+
+# Dataset / evaluation / preprocessing
+opencv-python-headless>=4.8
+nltk>=3.8
+
+# Parquet extraction helper (tools/extract_maelic_images.py)
+pyarrow>=10.0
+
+# Optional experiment logging (main.py --use_swanlab)
+swanlab>=0.10
+
+# Optional visualization helpers in util/plot_utils.py:
+# matplotlib>=3.5
+# seaborn>=0.11
+#
+# V-COCO annotation conversion additionally requires the external
+# `vsrl_utils.py` from https://github.com/s-gupta/v-coco
+# (it is not a pip package).
