@@ -3,21 +3,26 @@ export PYTHONUTF8=1
 export PYTHONIOENCODING=utf-8
 # Single-GPU evaluation for a checkpoint trained with the ROI object head.
 # Usage:
-#   bash exp/eval_hico_single_gpu.sh [checkpoint_path]
-# Default checkpoint:
-#   exps/BC-HOI-HICO-single/checkpoint_best.pth
+#   bash exp/eval_hico_single_gpu.sh [checkpoint_path] [hoi_path]
+# Defaults:
+#   checkpoint: exps/BC-HOI-HICO-single/checkpoint_best.pth
+#   hoi_path:   data/hico_20160224_det
+#
+# Example for the mini smoke-test dataset:
+#   bash exp/eval_hico_single_gpu.sh exps/mini/checkpoint_best.pth data/hico_mini
 #
 # If you evaluate a checkpoint WITHOUT the ROI head, remove
 # --use_roi_obj_head / --roi_size / --roi_query_num / --roi_train_boxes below.
 
 CKPT=${1:-exps/BC-HOI-HICO-single/checkpoint_best.pth}
+HOI_PATH=${2:-data/hico_20160224_det}
 EXP_DIR=exps/BC-HOI-HICO-single-eval
 
 python main.py \
         --eval \
         --resume ${CKPT} \
         --dataset_file hico \
-        --hoi_path data/hico_20160224_det \
+        --hoi_path ${HOI_PATH} \
         --num_obj_classes 80 \
         --num_verb_classes 117 \
         --backbone resnet50 \

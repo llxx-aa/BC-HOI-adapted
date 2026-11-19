@@ -32,7 +32,7 @@
 
 <p align="center">
   <span style="color:#e63946;font-weight:bold;">🔥 改进版 ROI 物体头</span> ·
-  <span style="color:#2a9d8f;font-weight:bold;">✅ Windows / Linux 已适配</span> ·
+  <span style="color:#2a9d8f;font-weight:bold;">✅ Linux / macOS / Windows 已适配</span> ·
   <span style="color:#457b9d;font-weight:bold;">📈 SwanLab 实验记录</span>
 </p>
 
@@ -43,7 +43,7 @@
 
 </details>
 
-在当前工作区中，除了原始 BC-HOI 代码，还完成了以下工程化改动：
+本项目在原始 BC-HOI 代码基础上，还完成了以下工程化改动：
 
 - 🛠️ 修复了 BLIP-2/LAVIS 在 PyTorch 2.5、Transformers 4.57、Windows 环境下的导入和 API 兼容问题；
 - 📦 新增 HICO-DET 图片 / PPDM 标注的下载与转换脚本；
@@ -52,6 +52,8 @@
 - 🖥️ 新增单卡训练、单卡评测和 UTF-8 控制台适配。
 
 > <span style="color:#d62828;font-weight:bold;">⚠️ 数据和预训练权重不随仓库提供</span>，需要按第 4 节准备。
+
+> 🌍 <span style="color:#457b9d;font-weight:bold;">可移植性说明</span>：以下命令默认在 **仓库根目录** 执行，使用激活环境中的 `python`，不依赖任何本机绝对路径。Linux / macOS / Windows（Git Bash 或 WSL）均可；Windows 的 `.sh` 脚本请在 Git Bash/WSL 中运行，或把脚本里的 `python main.py ...` 命令复制到 PowerShell 执行。
 
 ---
 
@@ -64,53 +66,31 @@
 ### 0.1 前置检查
 
 ```bash
-conda activate DL
-cd /e/Claude_project/BC-HOI_adapted
+# 环境名只是示例；换成你实际创建的 conda/venv 名称
+conda activate bchoi
 
-/d/Anaconda/envs/DL/python.exe -c \
-  "import torch, transformers, timm, lavis; print('✅ environment OK')"
+# 确保当前目录是仓库根目录（包含 main.py、lavis/、data/）
+python -c "import torch, transformers, timm, lavis; print('✅ environment OK')"
 
-ls params/detr-r50-pre-2branch-hico.pth
-ls data/hico_20160224_det/images/train2015 | wc -l   # 37633
-ls data/hico_20160224_det/images/test2015  | wc -l   # 9658
+python -c "from pathlib import Path; p=Path('params/detr-r50-pre-2branch-hico.pth'); print('DETR checkpoint:', p.exists())"
+python -c "from pathlib import Path; base=Path('data/hico_20160224_det/images'); print({s: len(list((base/s).glob('*.jpg'))) for s in ('train2015','test2015')})"
 ```
 
 ### 0.2 构造 mini 数据集（一次即可）
 
 ```bash
-python - <<'PY'
-import json, os, shutil
-
-SRC = 'data/hico_20160224_det'
-DST = 'data/hico_mini'
-N_TRAIN, N_TEST = 32, 8
-os.makedirs(os.path.join(DST, 'annotations'), exist_ok=True)
-
-for split, anno, img_dir, n in [
-    ('train2015', 'trainval_hico.json', 'images/train2015', N_TRAIN),
-    ('test2015',  'test_hico.json',     'images/test2015',  N_TEST),
-]:
-    with open(os.path.join(SRC, 'annotations', anno)) as f:
-        data = json.load(f)
-    keep = [a for a in data if a['hoi_annotation']][:n]
-    out_img = os.path.join(DST, img_dir)
-    os.makedirs(out_img, exist_ok=True)
-    for a in keep:
-        shutil.copy2(os.path.join(SRC, img_dir, a['file_name']),
-                     os.path.join(out_img, a['file_name']))
-    with open(os.path.join(DST, 'annotations', anno), 'w') as f:
-        json.dump(keep, f)
-
-shutil.copy2(os.path.join(SRC, 'annotations', 'corre_hico.npy'),
-             os.path.join(DST, 'annotations', 'corre_hico.npy'))
-print('✅ mini dataset ready: 32 train / 8 test images ->', DST)
-PY
+python tools/make_mini_hico.py \
+    --src data/hico_20160224_det \
+    --dst data/hico_mini \
+    --n-train 32 --n-test 8
 ```
+
+> 该脚本只复制**有 HOI 标注**的图片；如果你的完整数据路径不同，修改 `--src` 即可。
 
 ### 0.3 跑通 1 个 epoch
 
 ```bash
-/d/Anaconda/envs/DL/python.exe main.py \
+python main.py \
     --pretrained params/detr-r50-pre-2branch-hico.pth \
     --output_dir exps/mini \
     --dataset_file hico \
@@ -134,25 +114,13 @@ PY
 
 ### 0.4 跑通评测
 
-把 `exp/eval_hico_single_gpu.sh` 里的
-
-```text
---hoi_path data/hico_20160224_det
-```
-
-临时改成
-
-```text
---hoi_path data/hico_mini
-```
-
-然后运行：
+评测脚本的第二个参数可以直接指定数据路径：
 
 ```bash
-bash exp/eval_hico_single_gpu.sh exps/mini/checkpoint_best.pth
+bash exp/eval_hico_single_gpu.sh exps/mini/checkpoint_best.pth data/hico_mini
 ```
 
-看到 mAP 输出并在 `exps/BC-HOI-HICO-single-eval/results.json` 生成结果，就说明整条链路已经跑通。之后换回完整数据路径，执行第 5 节的正式训练即可。
+看到 mAP 输出并在 `exps/BC-HOI-HICO-single-eval/results.json` 生成结果，就说明整条链路已经跑通。之后使用默认数据路径执行第 5 节的正式训练即可。
 
 > <span style="color:#2a9d8f;font-weight:bold;">✅ 到此为止已验证：环境导入 → mini 数据 → 1 epoch 训练 → checkpoint → mAP 评测 → SwanLab 记录。</span>
 
@@ -291,8 +259,9 @@ BC-HOI_adapted/
 创建环境：
 
 ```bash
-conda create -n DL python=3.9 -y
-conda activate DL
+# 环境名可自定义；下文统一使用 bchoi
+conda create -n bchoi python=3.9 -y
+conda activate bchoi
 
 # 按你的 CUDA 版本安装 torch / torchvision（示例）
 pip install torch torchvision
@@ -422,6 +391,8 @@ params/detr-r50-pre-2branch-hico.pth
 | `facebook/opt-2.7b` | HuggingFace | `~/.cache/huggingface/hub/` |
 | `bert-base-uncased` | HuggingFace | `~/.cache/huggingface/hub/` |
 
+> 💻 Windows 下 `~/.cache` 通常对应 `%USERPROFILE%\.cache`，例如 `%USERPROFILE%\.cache\torch\hub\checkpoints` 和 `%USERPROFILE%\.cache\huggingface\hub`。
+
 LAVIS 的 Google Storage 地址：
 
 ```text
@@ -440,7 +411,10 @@ os.environ.setdefault("HF_ENDPOINT", "https://hf-mirror.com")
 如需使用官方 HuggingFace 或其他镜像，可在运行前覆盖：
 
 ```bash
+# Linux / macOS / Git Bash
 export HF_ENDPOINT=https://huggingface.co
+# Windows PowerShell
+# $env:HF_ENDPOINT="https://huggingface.co"
 ```
 
 ### 💬 4.5 LSG 的 GPT-4o caption（可选）
@@ -469,13 +443,15 @@ data/captions_gpt4o_new.json
 
 > <span style="color:#e76f51;font-weight:bold;">🚀 先跑 0 节 mini 方案，再上完整训练</span>；单卡脚本已经默认启用 ROI 头和 SwanLab local。
 
-### 🖥️ 5.1 单卡训练（推荐在本机/Windows 使用）
+### 🖥️ 5.1 单卡训练（推荐入门方式）
 
 ```bash
-conda activate DL
-cd /e/Claude_project/BC-HOI_adapted
+conda activate bchoi
+# 在仓库根目录执行
 bash exp/train_hico_single_gpu.sh
 ```
+
+> Windows 用户请在 **Git Bash / WSL** 中运行 `.sh` 脚本；也可以把脚本里的 `python main.py ...` 命令复制到 PowerShell 执行。
 
 该脚本默认：
 
@@ -624,8 +600,10 @@ bash exp/train_hico_single_gpu.sh
 
 ```bash
 swanlab watch exps/BC-HOI-HICO-single/swanlab
-# 如果 PATH 中没有 swanlab：
-/d/Anaconda/envs/DL/Scripts/swanlab.exe watch exps/BC-HOI-HICO-single/swanlab
+
+# 如果系统找不到 swanlab 命令，先确认已激活环境：
+#   Linux/macOS: which swanlab
+#   Windows:     where swanlab
 ```
 
 使用云端：
@@ -668,14 +646,17 @@ swanlab login
 没有激活正确的环境。使用：
 
 ```bash
-conda activate DL
-# 或直接用绝对路径
-/d/Anaconda/envs/DL/python.exe main.py ...
+conda activate bchoi
+python main.py ...
+
+# 确认当前 python 属于该环境：
+#   Linux/macOS: which python
+#   Windows:     where python
 ```
 
 **2. 💥 训练 OOM**
 
-本机 8 GB 显存放不下 EVA ViT-g + OPT-2.7B。把 `--batch_size` 改为 1 通常仍不够，建议使用 ≥24 GB（推荐 40 GB+）的 GPU。
+如果你的 GPU 只有 8 GB 显存，通常放不下 EVA ViT-g + OPT-2.7B。把 `--batch_size` 改为 1 通常仍不够，建议使用 ≥24 GB（推荐 40 GB+）的 GPU。
 
 **3. 🌐 首次运行卡在下载权重**
 
